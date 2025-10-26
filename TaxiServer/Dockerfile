@@ -1,13 +1,29 @@
-# --- Stage 1: Build the application ---
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# Use an official Maven + JDK image to build the project
+FROM maven:3.9.5-eclipse-temurin-17 AS build
+
+# Set working directory inside the container
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
+
+# Copy pom.xml from TaxiServer folder
+COPY TaxiServer/pom.xml .
+
+# Copy src folder from TaxiServer folder
+COPY TaxiServer/src ./src
+
+# Build the project and skip tests
 RUN mvn clean package -DskipTests
 
-# --- Stage 2: Run the application ---
-FROM eclipse-temurin:21-jdk-alpine
+# Use a minimal JDK runtime image for running the app
+FROM eclipse-temurin:17-jdk-jammy
+
+# Set working directory
 WORKDIR /app
+
+# Copy the built jar from the Maven build stage
 COPY --from=build /app/target/*.jar app.jar
+
+# Expose the port your Spring Boot app runs on
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Command to run the jar
+ENTRYPOINT ["java","-jar","app.jar"]
